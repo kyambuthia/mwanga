@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mwanga — WebGL2 Engine</title>
+    <title>mwanga — WebGL2 Engine & Impostor Showcase</title>
     <style>
       *, *::before, *::after { box-sizing: border-box; }
       html, body {
@@ -32,12 +32,47 @@
         top: 12px;
         left: 12px;
         padding: 8px 12px;
-        background: rgba(11, 14, 20, 0.72);
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(11, 14, 20, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.14);
         border-radius: 6px;
         font-size: 12px;
         line-height: 1.5;
         pointer-events: none;
+        white-space: pre;
+      }
+      #switcher {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        display: flex;
+        gap: 6px;
+      }
+      #switcher button {
+        background: rgba(18, 24, 34, 0.85);
+        color: #cbd5e1;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      #switcher button.active {
+        background: #f59e0b;
+        color: #0b0e14;
+        font-weight: 600;
+        border-color: #f59e0b;
+      }
+      #crosshair {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 12px;
+        height: 12px;
+        margin: -6px 0 0 -6px;
+        border: 2px solid rgba(255, 255, 255, 0.7);
+        border-radius: 50%;
+        pointer-events: none;
+        display: none;
       }
     </style>
   </head>
@@ -45,6 +80,12 @@
     <div id="app">
       <canvas id="mwanga-canvas"></canvas>
       <div id="hud">Loading mwanga...</div>
+      <div id="switcher">
+        <button data-demo="0" class="active">1: Horde Arena</button>
+        <button data-demo="1">2: FPS Gauntlet</button>
+        <button data-demo="2">3: 3D vs Impostor</button>
+      </div>
+      <div id="crosshair"></div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
