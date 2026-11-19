@@ -1,5 +1,5 @@
 import { MwangaEngine } from "./engine/engine.ts";
-import { LINE_FRAG, LINE_VERT, LIT_FRAG, LIT_VERT, ShaderProgram } from "./engine/gl.ts";
+import { LINE_FRAG, LINE_VERT, LIT_FRAG, LIT_VERT, ShaderProgram, createWhiteTexture } from "./engine/gl.ts";
 import {
   createMat4,
   mat4LookAt,
@@ -46,6 +46,9 @@ const engine = new MwangaEngine(canvas, {
     boxMesh = createBoxMesh(gl, 1);
     gridMesh = createGridMesh(gl, 12, 1);
     gl.clearColor(0.05, 0.07, 0.1, 1.0);
+    const whiteTex = createWhiteTexture(gl);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, whiteTex);
   },
 
   onUpdate(dt, elapsed, eng) {
@@ -111,6 +114,8 @@ const engine = new MwangaEngine(canvas, {
     litProgram.use();
     gl.uniformMatrix4fv(litProgram.uniform("uViewProj"), false, viewProj);
     gl.uniform3f(litProgram.uniform("uLightDir"), 0.6, 1.0, 0.5);
+    gl.uniform1f(litProgram.uniform("uUseTexture"), 0.0);
+    gl.uniform1i(litProgram.uniform("uBaseColorMap"), 0);
 
     const t = performance.now() * 0.001;
     for (let i = 0; i < cubes.length; i++) {

@@ -74,20 +74,41 @@ export class ShaderProgram {
   }
 }
 
+export function createWhiteTexture(gl: WebGL2RenderingContext): WebGLTexture {
+  const tex = gl.createTexture();
+  if (!tex) throw new Error("Failed to allocate WebGLTexture.");
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    gl.RGBA,
+    1,
+    1,
+    0,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    new Uint8Array([255, 255, 255, 255])
+  );
+  return tex;
+}
+
 export const LIT_VERT = `#version 300 es
 precision highp float;
 
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aNormal;
+layout(location = 2) in vec2 aUv;
 
 uniform mat4 uModel;
 uniform mat4 uViewProj;
 
 out vec3 vNormal;
+out vec2 vUv;
 
 void main() {
   vec4 worldPos = uModel * vec4(aPosition, 1.0);
   vNormal = mat3(uModel) * aNormal;
+  vUv = aUv;
   gl_Position = uViewProj * worldPos;
 }
 `;
@@ -96,17 +117,24 @@ export const LIT_FRAG = `#version 300 es
 precision mediump float;
 
 in vec3 vNormal;
+in vec2 vUv;
 
 uniform vec3 uColor;
 uniform vec3 uLightDir;
+uniform sampler2D uBaseColorMap;
+uniform float uUseTexture;
 
 out vec4 outColor;
 
 void main() {
   vec3 n = normalize(vNormal);
   float diff = max(dot(n, normalize(uLightDir)), 0.0);
-  float hemi = 0.25 + 0.15 * n.y;
-  vec3 lit = uColor * (hemi + diff * 0.85);
+  float hemi = 0.28 + 0.16 * n.y;
+  vec3 albedo = uColor;
+  if (uUseTexture > 0.5) {
+    albedo *= texture(uBaseColorMap, vUv).rgb;
+  }
+  vec3 lit = albedo * (hemi + diff * 0.85);
   outColor = vec4(lit, 1.0);
 }
 `;

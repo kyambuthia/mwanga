@@ -4,6 +4,7 @@ export class GpuMesh {
   private readonly ibo: WebGLBuffer | null = null;
   public readonly count: number;
   public readonly indexed: boolean;
+  public readonly indexType: number;
   public readonly mode: number;
 
   constructor(
@@ -11,7 +12,7 @@ export class GpuMesh {
     vertices: Float32Array,
     strideFloats: number,
     attributes: Array<{ location: number; size: number; offsetFloats: number }>,
-    indices?: Uint16Array,
+    indices?: Uint16Array | Uint32Array,
     mode: number = gl.TRIANGLES
   ) {
     const vao = gl.createVertexArray();
@@ -45,10 +46,12 @@ export class GpuMesh {
       this.ibo = ibo;
       this.indexed = true;
       this.count = indices.length;
+      this.indexType = indices instanceof Uint32Array ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
       gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
     } else {
       this.indexed = false;
+      this.indexType = gl.UNSIGNED_SHORT;
       this.count = vertices.length / strideFloats;
     }
 
@@ -59,7 +62,7 @@ export class GpuMesh {
     const gl = this.gl;
     gl.bindVertexArray(this.vao);
     if (this.indexed) {
-      gl.drawElements(this.mode, this.count, gl.UNSIGNED_SHORT, 0);
+      gl.drawElements(this.mode, this.count, this.indexType, 0);
     } else {
       gl.drawArrays(this.mode, 0, this.count);
     }
@@ -74,38 +77,38 @@ export class GpuMesh {
 
 export function createBoxMesh(gl: WebGL2RenderingContext, size = 1): GpuMesh {
   const h = size * 0.5;
-  // 24 vertices (pos x,y,z + normal x,y,z)
+  // 24 vertices (pos x,y,z + normal x,y,z + uv u,v)
   const v = new Float32Array([
     // +Z
-    -h, -h,  h,  0,  0,  1,
-     h, -h,  h,  0,  0,  1,
-     h,  h,  h,  0,  0,  1,
-    -h,  h,  h,  0,  0,  1,
+    -h, -h,  h,  0,  0,  1,  0, 1,
+     h, -h,  h,  0,  0,  1,  1, 1,
+     h,  h,  h,  0,  0,  1,  1, 0,
+    -h,  h,  h,  0,  0,  1,  0, 0,
     // -Z
-     h, -h, -h,  0,  0, -1,
-    -h, -h, -h,  0,  0, -1,
-    -h,  h, -h,  0,  0, -1,
-     h,  h, -h,  0,  0, -1,
+     h, -h, -h,  0,  0, -1,  0, 1,
+    -h, -h, -h,  0,  0, -1,  1, 1,
+    -h,  h, -h,  0,  0, -1,  1, 0,
+     h,  h, -h,  0,  0, -1,  0, 0,
     // +X
-     h, -h,  h,  1,  0,  0,
-     h, -h, -h,  1,  0,  0,
-     h,  h, -h,  1,  0,  0,
-     h,  h,  h,  1,  0,  0,
+     h, -h,  h,  1,  0,  0,  0, 1,
+     h, -h, -h,  1,  0,  0,  1, 1,
+     h,  h, -h,  1,  0,  0,  1, 0,
+     h,  h,  h,  1,  0,  0,  0, 0,
     // -X
-    -h, -h, -h, -1,  0,  0,
-    -h, -h,  h, -1,  0,  0,
-    -h,  h,  h, -1,  0,  0,
-    -h,  h, -h, -1,  0,  0,
+    -h, -h, -h, -1,  0,  0,  0, 1,
+    -h, -h,  h, -1,  0,  0,  1, 1,
+    -h,  h,  h, -1,  0,  0,  1, 0,
+    -h,  h, -h, -1,  0,  0,  0, 0,
     // +Y
-    -h,  h,  h,  0,  1,  0,
-     h,  h,  h,  0,  1,  0,
-     h,  h, -h,  0,  1,  0,
-    -h,  h, -h,  0,  1,  0,
+    -h,  h,  h,  0,  1,  0,  0, 1,
+     h,  h,  h,  0,  1,  0,  1, 1,
+     h,  h, -h,  0,  1,  0,  1, 0,
+    -h,  h, -h,  0,  1,  0,  0, 0,
     // -Y
-    -h, -h, -h,  0, -1,  0,
-     h, -h, -h,  0, -1,  0,
-     h, -h,  h,  0, -1,  0,
-    -h, -h,  h,  0, -1,  0,
+    -h, -h, -h,  0, -1,  0,  0, 1,
+     h, -h, -h,  0, -1,  0,  1, 1,
+     h, -h,  h,  0, -1,  0,  1, 0,
+    -h, -h,  h,  0, -1,  0,  0, 0,
   ]);
 
   const idx = new Uint16Array([
@@ -120,10 +123,11 @@ export function createBoxMesh(gl: WebGL2RenderingContext, size = 1): GpuMesh {
   return new GpuMesh(
     gl,
     v,
-    6,
+    8,
     [
       { location: 0, size: 3, offsetFloats: 0 },
       { location: 1, size: 3, offsetFloats: 3 },
+      { location: 2, size: 2, offsetFloats: 6 },
     ],
     idx,
     gl.TRIANGLES
